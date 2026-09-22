@@ -3,6 +3,7 @@ from pathlib import Path
 
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.tools import tool
 
 
 BASE_URL = os.getenv(
@@ -39,7 +40,8 @@ prompt = ChatPromptTemplate.from_messages([
         "system",
         """
             你是一名擅长写网络小说的专业小说作家。
-            你必须严格参考以下小说资料进行创作。。
+            你必须严格参考以下小说资料进行创作。
+            必须自然承接上一章剧情
             【世界观】
             {world}
             
@@ -153,6 +155,29 @@ def read_previous_chapter(chapter):
         encoding="utf-8"
     )
 
+@tool
+def read_world():
+    """读取小说世界观设定。"""
+    return Path("novel/world.md").read_text(
+        encoding="utf-8"
+    )
+print(read_world.name)
+print(read_world.description)
+print(read_world.invoke({}))
+@tool
+def read_characters():
+    """读取小说人物设定"""
+    return Path("novel/characters.md").read_text(
+        encoding="utf-8"
+    )
+
+@tool
+def read_outline():
+    """读取小说整体大纲"""
+    return Path("novel/outline.md").read_text(
+        encoding="utf-8"
+    )
+
 world = read_novel_file("world.md")
 characters  = read_novel_file("characters.md")
 outline  = read_novel_file("outline.md")
@@ -161,24 +186,24 @@ chapter = 2
 
 previous_chapter = read_previous_chapter(chapter)
 
-content = generate_chapter(
-    genre="玄幻",
-    protagonist="林深",
-    chapter=chapter,
+# content = generate_chapter(
+#     genre="玄幻",
+#     protagonist="林深",
+#     chapter=chapter,
+#
+#     # 调试阶段先别写 1000 字
+#     word_count=200,
+#     world=world,
+#     characters=characters,
+#     outline=outline,
+#     previous_chapter=previous_chapter
+# )
+#
+#
+# file_path = save_chapter(
+#     chapter=chapter,
+#     content=content,
+# )
 
-    # 调试阶段先别写 1000 字
-    word_count=200,
-    world=world,
-    characters=characters,
-    outline=outline,
-    previous_chapter=previous_chapter
-)
 
-
-file_path = save_chapter(
-    chapter=chapter,
-    content=content,
-)
-
-
-print(f"小说已保存：{file_path}")
+# print(f"小说已保存：{file_path}")
