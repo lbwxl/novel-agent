@@ -2,6 +2,8 @@ import os
 
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
+from langchain_core.prompts import ChatPromptTemplate
+
 
 BASE_URL = os.getenv(
     "LLM_BASE_URL",
@@ -24,14 +26,30 @@ model = ChatOpenAI(
     api_key=API_KEY,
 )
 
-messages = [
-    SystemMessage(
-        content="你是一名擅长写网络小说的专业小说作家"
+
+prompt = ChatPromptTemplate.from_messages([
+    (
+        "system",
+        "你是一名擅长写网络小说的专业小说作家。"
     ),
-    HumanMessage(
-        content="请给我写一个玄幻小说的开头，大约300字。"
+    (
+        "human",
+        """
+            请创作一章小说。
+            小说类型：{genre}
+            主人公：{protagonist}
+            章节：第{chapter} 章
+            目标字数：{word_count} 字
+        """
     )
-]
+])
+
+messages = prompt.invoke({
+    "genre": "玄幻",
+    "protagonist": "林深",
+    "chapter": 1,
+    "word_count": 1000,
+})
 
 response = model.invoke(messages)
 print(response.content)
