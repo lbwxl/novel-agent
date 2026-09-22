@@ -3,6 +3,8 @@ from pathlib import Path
 
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.tools import tool
+from langchain_core.messages import HumanMessage, ToolMessage
 
 
 BASE_URL = os.getenv(
@@ -39,7 +41,8 @@ prompt = ChatPromptTemplate.from_messages([
         "system",
         """
             你是一名擅长写网络小说的专业小说作家。
-            你必须严格参考以下小说资料进行创作。。
+            你必须严格参考以下小说资料进行创作。
+            必须自然承接上一章剧情
             【世界观】
             {world}
             
@@ -153,6 +156,27 @@ def read_previous_chapter(chapter):
         encoding="utf-8"
     )
 
+@tool
+def read_world():
+    """读取小说世界观设定。"""
+    return Path("novel/world.md").read_text(
+        encoding="utf-8"
+    )
+
+@tool
+def read_characters():
+    """读取小说人物设定"""
+    return Path("novel/characters.md").read_text(
+        encoding="utf-8"
+    )
+
+@tool
+def read_outline():
+    """读取小说整体大纲"""
+    return Path("novel/outline.md").read_text(
+        encoding="utf-8"
+    )
+
 world = read_novel_file("world.md")
 characters  = read_novel_file("characters.md")
 outline  = read_novel_file("outline.md")
@@ -161,24 +185,69 @@ chapter = 2
 
 previous_chapter = read_previous_chapter(chapter)
 
-content = generate_chapter(
-    genre="玄幻",
-    protagonist="林深",
-    chapter=chapter,
+# content = generate_chapter(
+#     genre="玄幻",
+#     protagonist="林深",
+#     chapter=chapter,
+#
+#     # 调试阶段先别写 1000 字
+#     word_count=200,
+#     world=world,
+#     characters=characters,
+#     outline=outline,
+#     previous_chapter=previous_chapter
+# )
+#
+#
+# file_path = save_chapter(
+#     chapter=chapter,
+#     content=content,
+# )
 
-    # 调试阶段先别写 1000 字
-    word_count=200,
-    world=world,
-    characters=characters,
-    outline=outline,
-    previous_chapter=previous_chapter
-)
+
+# print(f"小说已保存：{file_path}")
+
+tools = [
+    read_world,
+    read_characters,
+    read_outline,
+]
+
+model_with_tools = model.bind_tools(tools)
+
+messages = [
+    HumanMessage(
+        content="我要继续创作小说，在开始创作之前，请先读取小说的世界观设定。"
+    )
+]
+
+response = model_with_tools.invoke(messages)
+messages.append(response)
+
+print("第一次模型返回：")
+print(response.tool_calls)
+
+tools_by_name = {
+    tool.name: tool
+    for tool in tools
+}
+print('tools_by_name', tools_by_name)
+for tool_call in response.tool_calls:
+    tool_name = tool_call["name"]
+    tool_args = tool_call["args"]
+
+    tool = tools_by_name[tool_name]
+    result = tool.invoke(tool_args)
+
+    tool_message = ToolMessage(
+        content=result,
+        tool_call_id=tool_call["id"],
+    )
+
+    messages.append(tool_message)
 
 
-file_path = save_chapter(
-    chapter=chapter,
-    content=content,
-)
+final_response = model_with_tools.invoke(messages)
 
-
-print(f"小说已保存：{file_path}")
+print("模型最终问题：")
+print(final_response.content)
