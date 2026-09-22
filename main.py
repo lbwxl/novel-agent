@@ -37,7 +37,18 @@ model = ChatOpenAI(
 prompt = ChatPromptTemplate.from_messages([
     (
         "system",
-        "你是一名擅长写网络小说的专业小说作家。"
+        """
+            你是一名擅长写网络小说的专业小说作家。
+            你必须严格参考一下小说资料进行创作。
+            【世界观】
+            {world}
+            
+            【人物设定】
+            {characters}
+            
+            【小说大纲】
+            {outline}
+        """
     ),
     (
         "human",
@@ -48,6 +59,11 @@ prompt = ChatPromptTemplate.from_messages([
 主人公：{protagonist}
 章节：第 {chapter} 章
 目标字数：约 {word_count} 字
+
+要求：
+1. 不要违反已有世界观
+2. 不要随意修改任务设定
+3. 剧情应尽量符合小说大纲
 """
     )
 ])
@@ -61,6 +77,9 @@ def generate_chapter(
     protagonist,
     chapter,
     word_count,
+    world,
+    characters,
+    outline,
 ):
     print("开始生成小说...")
     print(f"模型：{MODEL_ID}")
@@ -72,6 +91,9 @@ def generate_chapter(
             "protagonist": protagonist,
             "chapter": chapter,
             "word_count": word_count,
+            "world": world,
+            "characters": characters,
+            "outline": outline,
         })
 
         print("模型生成完成")
@@ -104,6 +126,16 @@ def save_chapter(chapter, content):
 
     return file_path
 
+def read_novel_file(filename):
+    file_path = Path("novel") / filename
+
+    return file_path.read_text(
+        encoding="utf-8"
+    )
+
+world = read_novel_file("world.md")
+characters  = read_novel_file("characters.md")
+outline  = read_novel_file("outline.md")
 
 chapter = 1
 
@@ -114,6 +146,9 @@ content = generate_chapter(
 
     # 调试阶段先别写 1000 字
     word_count=200,
+    world=world,
+    characters=characters,
+    outline=outline,
 )
 
 
