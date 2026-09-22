@@ -1,7 +1,6 @@
 import os
 
 from langchain_openai import ChatOpenAI
-from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 
 
@@ -44,12 +43,21 @@ prompt = ChatPromptTemplate.from_messages([
     )
 ])
 
-messages = prompt.invoke({
+# messages = prompt.invoke({
+#     "genre": "玄幻",
+#     "protagonist": "林深",
+#     "chapter": 1,
+#     "word_count": 1000,
+# })
+
+chain = prompt | model
+response = chain.invoke({
     "genre": "玄幻",
     "protagonist": "林深",
     "chapter": 1,
     "word_count": 1000,
 })
-
-response = model.invoke(messages)
 print(response.content)
+
+
+
