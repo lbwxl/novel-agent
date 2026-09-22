@@ -2,6 +2,7 @@ import os
 
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
+from pathlib import Path
 
 
 BASE_URL = os.getenv(
@@ -43,21 +44,27 @@ prompt = ChatPromptTemplate.from_messages([
     )
 ])
 
-# messages = prompt.invoke({
-#     "genre": "玄幻",
-#     "protagonist": "林深",
-#     "chapter": 1,
-#     "word_count": 1000,
-# })
-
 chain = prompt | model
+
+chapter = 1
+
 response = chain.invoke({
     "genre": "玄幻",
     "protagonist": "林深",
-    "chapter": 1,
+    "chapter": chapter,
     "word_count": 1000,
 })
-print(response.content)
+
+content = response.content
+
+chapters_dir = Path("novel/chapters")
+chapters_dir.mkdir(parents=True, exist_ok=True)
+
+file_path = chapters_dir / f"{chapter:03d}.md"
+
+file_path.write_text(content, encoding="utf-8")
+
+print(f"小说已保存：{file_path}")
 
 
 
