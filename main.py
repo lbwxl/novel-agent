@@ -48,23 +48,26 @@ prompt = ChatPromptTemplate.from_messages([
             
             【小说大纲】
             {outline}
+            
+            【上一章内容】
+            {previous_chapter}
         """
     ),
     (
         "human",
         """
-请创作一章小说。
-
-小说类型：{genre}
-主人公：{protagonist}
-章节：第 {chapter} 章
-目标字数：约 {word_count} 字
-
-要求：
-1. 不要违反已有世界观
-2. 不要随意修改人物设定
-3. 剧情应尽量符合小说大纲
-"""
+            请创作一章小说。
+            
+            小说类型：{genre}
+            主人公：{protagonist}
+            章节：第 {chapter} 章
+            目标字数：约 {word_count} 字
+            
+            要求：
+            1. 不要违反已有世界观
+            2. 不要随意修改人物设定
+            3. 剧情应尽量符合小说大纲
+        """
     )
 ])
 
@@ -80,6 +83,7 @@ def generate_chapter(
     world,
     characters,
     outline,
+    previous_chapter,
 ):
     print("开始生成小说...")
     print(f"模型：{MODEL_ID}")
@@ -94,6 +98,7 @@ def generate_chapter(
             "world": world,
             "characters": characters,
             "outline": outline,
+            "previous_chapter": previous_chapter,
         })
 
         print("模型生成完成")
@@ -133,11 +138,28 @@ def read_novel_file(filename):
         encoding="utf-8"
     )
 
+def read_previous_chapter(chapter):
+    if chapter <= 1:
+        return "这是第一章，没有上一章内容。"
+
+    previous_chapter = chapter - 1
+
+    file_path = Path("novel/chapters") / f"{previous_chapter:03d}.md"
+
+    if not file_path.exists():
+        return "未找到上一章内容。"
+
+    return file_path.read_text(
+        encoding="utf-8"
+    )
+
 world = read_novel_file("world.md")
 characters  = read_novel_file("characters.md")
 outline  = read_novel_file("outline.md")
 
-chapter = 1
+chapter = 2
+
+previous_chapter = read_previous_chapter(chapter)
 
 content = generate_chapter(
     genre="玄幻",
@@ -149,6 +171,7 @@ content = generate_chapter(
     world=world,
     characters=characters,
     outline=outline,
+    previous_chapter=previous_chapter
 )
 
 
