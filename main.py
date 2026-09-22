@@ -39,7 +39,7 @@ prompt = ChatPromptTemplate.from_messages([
         "system",
         """
             你是一名擅长写网络小说的专业小说作家。
-            你必须严格参考一下小说资料进行创作。
+            你必须严格参考以下小说资料进行创作。。
             【世界观】
             {world}
             
@@ -62,7 +62,7 @@ prompt = ChatPromptTemplate.from_messages([
 
 要求：
 1. 不要违反已有世界观
-2. 不要随意修改任务设定
+2. 不要随意修改人物设定
 3. 剧情应尽量符合小说大纲
 """
     )
