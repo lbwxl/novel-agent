@@ -177,35 +177,8 @@ def read_outline():
         encoding="utf-8"
     )
 
-world = read_novel_file("world.md")
-characters  = read_novel_file("characters.md")
-outline  = read_novel_file("outline.md")
 
 chapter = 2
-
-previous_chapter = read_previous_chapter(chapter)
-
-# content = generate_chapter(
-#     genre="玄幻",
-#     protagonist="林深",
-#     chapter=chapter,
-#
-#     # 调试阶段先别写 1000 字
-#     word_count=200,
-#     world=world,
-#     characters=characters,
-#     outline=outline,
-#     previous_chapter=previous_chapter
-# )
-#
-#
-# file_path = save_chapter(
-#     chapter=chapter,
-#     content=content,
-# )
-
-
-# print(f"小说已保存：{file_path}")
 
 tools = [
     read_world,
@@ -213,41 +186,63 @@ tools = [
     read_outline,
 ]
 
-model_with_tools = model.bind_tools(tools)
+model_with_tools = model.bind_tools(
+    tools,
+)
 
 messages = [
     HumanMessage(
-        content="我要继续创作小说，在开始创作之前，请先读取小说的世界观设定。"
+        content="""
+        我准备继续创作这本小说。
+
+        在回答之前，你需要自己判断应该读取哪些小说资料。
+        请了解世界观、主要人物和故事大纲，
+        然后告诉我下一章应该重点推进什么剧情。
+        """
     )
 ]
-
-response = model_with_tools.invoke(messages)
-messages.append(response)
-
-print("第一次模型返回：")
-print(response.tool_calls)
 
 tools_by_name = {
     tool.name: tool
     for tool in tools
 }
-print('tools_by_name', tools_by_name)
-for tool_call in response.tool_calls:
-    tool_name = tool_call["name"]
-    tool_args = tool_call["args"]
 
-    tool = tools_by_name[tool_name]
-    result = tool.invoke(tool_args)
+while True:
+    response = model_with_tools.invoke(messages)
+    messages.append(response)
 
-    tool_message = ToolMessage(
-        content=result,
-        tool_call_id=tool_call["id"],
-    )
+    print("模型返回")
+    print(response.content)
 
-    messages.append(tool_message)
+    print("模型请求的工具")
+    print(response.tool_calls)
 
+    # 没有工具调用，说明模型已经得到最终答案
+    if not response.tool_calls:
+        print()
+        print("Agent 执行结束")
+        print("最终回答：")
+        print(response.content)
 
-final_response = model_with_tools.invoke(messages)
+        break
 
-print("模型最终问题：")
-print(final_response.content)
+    # 有工具调用，则执行工具
+    for tool_call in response.tool_calls:
+        tool_name = tool_call["name"]
+        tool_args = tool_call["args"]
+
+        print()
+        print("准备执行工具：", tool_name)
+        print("工具参数：", tool_args)
+
+        tool = tools_by_name[tool_name]
+        result = tool.invoke(tool_args)
+
+        print("工具结果：")
+        print(result)
+
+        tool_message = ToolMessage(
+            content=result,
+            tool_call_id=tool_call["id"],
+        )
+        messages.append(tool_message)
