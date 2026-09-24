@@ -53,10 +53,59 @@ def get_novel_state() -> str:
         indent=2,
     )
 
+@tool
+def write_chapter(chapter: int, content: str) -> str:
+    """保存指定章节的小说正文。chapter是章节号，content是完整的章节正文。"""
+
+    chapters_dir = Path("novel/chapters")
+
+    chapters_dir.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    file_path = chapters_dir / f"{chapter:03d}.md"
+
+    if file_path.exists():
+        return f"第 {chapter} 章已经存在，为防止覆盖，本次没有保存。"
+
+    file_path.write_text(
+        content,
+        encoding="utf-8",
+    )
+
+    return f"第 {chapter} 章保存成功：{file_path}"
+
+@tool
+def update_novel_state(
+    current_chapter: int,
+    location: str,
+) -> str:
+    """更新小说当前进度。写完新章节以后使用"""
+    file_path = Path("novel/state.json")
+
+    content = file_path.read_text(
+        encoding="utf-8"
+    )
+
+    state = json.loads(content)
+    state["current_chapter"] = current_chapter
+    state["location"] = location
+    file_path.write_text(
+        json.dumps(
+            state,
+            ensure_ascii=False,
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+    return f"小说进度已更新到第 {current_chapter} 章"
+
 tools = [
     read_world,
     read_characters,
     read_outline,
     read_chapter,
-    get_novel_state
+    get_novel_state,
+    write_chapter
 ]
