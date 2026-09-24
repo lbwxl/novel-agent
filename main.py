@@ -177,6 +177,19 @@ def read_outline():
         encoding="utf-8"
     )
 
+@tool()
+def read_chapter(chapter: int) -> str:
+    """读取指定章节的小说正文。chapter是需要读取的章节号。"""
+    if chapter < 1:
+        return "章节号必须大于等于1"
+
+    file_path = Path("novel/chapters") / f"{chapter:03d}.md"
+
+    if not file_path.exists():
+        return f"第{chapter}.md章不存在"
+    return file_path.read_text(
+        encoding="utf-8"
+    )
 
 chapter = 2
 
@@ -184,6 +197,7 @@ tools = [
     read_world,
     read_characters,
     read_outline,
+    read_chapter
 ]
 
 model_with_tools = model.bind_tools(
@@ -193,11 +207,13 @@ model_with_tools = model.bind_tools(
 messages = [
     HumanMessage(
         content="""
-        我准备继续创作这本小说。
+        我准备创作这本小说的第 3 章。
 
-        在回答之前，你需要自己判断应该读取哪些小说资料。
-        请了解世界观、主要人物和故事大纲，
-        然后告诉我下一章应该重点推进什么剧情。
+        请你自己判断创作前需要读取哪些资料。
+
+        我特别关心剧情连续性，
+        所以你需要了解前面的剧情以后，
+        再告诉我第 3 章应该重点推进什么内容。
         """
     )
 ]
