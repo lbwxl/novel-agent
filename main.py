@@ -1,4 +1,5 @@
 import os
+import json
 from pathlib import Path
 
 from langchain_openai import ChatOpenAI
@@ -177,7 +178,7 @@ def read_outline():
         encoding="utf-8"
     )
 
-@tool()
+@tool
 def read_chapter(chapter: int) -> str:
     """读取指定章节的小说正文。chapter是需要读取的章节号。"""
     if chapter < 1:
@@ -186,10 +187,22 @@ def read_chapter(chapter: int) -> str:
     file_path = Path("novel/chapters") / f"{chapter:03d}.md"
 
     if not file_path.exists():
-        return f"第{chapter}.md章不存在"
+        return f"第{chapter}章不存在"
     return file_path.read_text(
         encoding="utf-8"
     )
+
+@tool
+def get_novel_state() -> dict:
+    """读取小说当前进度，包括当前章节、当前卷、主角和当前位置。"""
+
+    file_path = Path("novel/state.json")
+
+    content = file_path.read_text(
+        encoding="utf-8"
+    )
+
+    return json.loads(content)
 
 chapter = 2
 
@@ -197,7 +210,8 @@ tools = [
     read_world,
     read_characters,
     read_outline,
-    read_chapter
+    read_chapter,
+    get_novel_state
 ]
 
 model_with_tools = model.bind_tools(
@@ -207,13 +221,11 @@ model_with_tools = model.bind_tools(
 messages = [
     HumanMessage(
         content="""
-        我准备创作这本小说的第 3 章。
-
-        请你自己判断创作前需要读取哪些资料。
-
-        我特别关心剧情连续性，
-        所以你需要了解前面的剧情以后，
-        再告诉我第 3 章应该重点推进什么内容。
+        我想继续写这本小说的下一章。
+        我不知道目前已经写到第几章。
+        请你自行读取需要的信息，
+        了解当前小说进度、前文剧情、世界观、人物和大纲，
+        最后告诉我下一章应该重点推进什么剧情。
         """
     )
 ]
