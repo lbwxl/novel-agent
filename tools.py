@@ -81,7 +81,12 @@ def update_novel_state(
     current_chapter: int,
     location: str,
 ) -> str:
-    """更新小说当前进度。写完新章节以后使用"""
+    """更新小说当前进度。章节保存成功后使用；目标章节文件不存在时拒绝更新。"""
+    chapter_path = Path("novel/chapters") / f"{current_chapter:03d}.md"
+
+    if not chapter_path.is_file():
+        return f"第 {current_chapter} 章文件不存在，本次没有更新小说进度。"
+
     file_path = Path("novel/state.json")
 
     content = file_path.read_text(
@@ -107,5 +112,6 @@ tools = [
     read_outline,
     read_chapter,
     get_novel_state,
-    write_chapter
+    write_chapter,
+    update_novel_state
 ]
