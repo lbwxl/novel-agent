@@ -1,9 +1,10 @@
 from tools import read_chapter,write_chapter,update_novel_state
 import json
+import pytest
 
-
-def test_read_chapter_rejects_zero():
-  result = read_chapter.invoke({"chapter": 0})
+@pytest.mark.parametrize("chapter", [0, -1, -10])
+def test_read_chapter_rejects_zero(chapter):
+  result = read_chapter.invoke({"chapter": chapter})
 
   assert result == "章节号必须大于等于1"
 
