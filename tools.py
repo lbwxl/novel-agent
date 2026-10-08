@@ -59,6 +59,13 @@ def write_chapter(chapter: int, content: str) -> str:
 
     chapters_dir = Path("novel/chapters")
 
+    if chapter < 1:
+        return f"章节号必须大于等于 1，当前是 {chapter}"
+
+    if content.strip() == "":
+        return f"第 {chapter} 章正文不能为空"
+
+
     chapters_dir.mkdir(
         parents=True,
         exist_ok=True,
@@ -94,8 +101,14 @@ def update_novel_state(
     )
 
     state = json.loads(content)
+    expected_chapter = state["current_chapter"] + 1
+    if expected_chapter != current_chapter:
+        return f"下一章节应该是第 {expected_chapter} 章，当前要更新的章节是第 {current_chapter} 章，不符合逐章续写"
+
     state["current_chapter"] = current_chapter
     state["location"] = location
+
+
     file_path.write_text(
         json.dumps(
             state,
