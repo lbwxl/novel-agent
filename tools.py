@@ -41,17 +41,34 @@ def read_chapter(chapter: int) -> str:
 def get_novel_state() -> str:
     """读取小说当前进度，包括当前章节、当前卷、主角和当前位置。"""
 
-    file_path = Path("novel/state.json")
+    try:
+        file_path = Path("novel/state.json")
 
-    content = file_path.read_text(
-        encoding="utf-8"
-    )
+        content = file_path.read_text(
+          encoding="utf-8"
+        )
 
-    return json.dumps(
-        json.loads(content),
-        ensure_ascii=False,
-        indent=2,
-    )
+        state = json.loads(content)
+        if type(state) != dict:
+          return f"state 类型必须为dict，state={state}"
+
+        chapter = state.get("current_chapter")
+
+        if type(chapter) != int:
+            return f"current_chapter类型必须为 int"
+
+        if chapter < 0:
+            return f"current_chapter 不能小于 0"
+
+        return json.dumps(
+          state,
+          ensure_ascii=False,
+          indent=2,
+        )
+    except OSError as error:
+        return f"小说进度获取失败 {error}"
+    except json.decoder.JSONDecodeError as error:
+        return f"JSON处理失败 {error}"
 
 @tool
 def write_chapter(chapter: int, content: str) -> str:
