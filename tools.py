@@ -65,23 +65,25 @@ def write_chapter(chapter: int, content: str) -> str:
     if content.strip() == "":
         return f"第 {chapter} 章正文不能为空"
 
+    try:
+        chapters_dir.mkdir(
+          parents=True,
+          exist_ok=True,
+        )
 
-    chapters_dir.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
+        file_path = chapters_dir / f"{chapter:03d}.md"
 
-    file_path = chapters_dir / f"{chapter:03d}.md"
+        if file_path.exists():
+            return f"第 {chapter} 章已经存在，为防止覆盖，本次没有保存。"
 
-    if file_path.exists():
-        return f"第 {chapter} 章已经存在，为防止覆盖，本次没有保存。"
+        file_path.write_text(
+          content,
+          encoding="utf-8",
+        )
 
-    file_path.write_text(
-        content,
-        encoding="utf-8",
-    )
-
-    return f"第 {chapter} 章保存成功：{file_path}"
+        return f"第 {chapter} 章保存成功：{file_path}"
+    except OSError as error:
+        return f"第 {chapter} 章保存失败：{error}。请勿更新小说进度。"
 
 @tool
 def update_novel_state(
@@ -89,35 +91,44 @@ def update_novel_state(
     location: str,
 ) -> str:
     """更新小说当前进度。章节保存成功后使用；目标章节文件不存在时拒绝更新。"""
-    chapter_path = Path("novel/chapters") / f"{current_chapter:03d}.md"
+    try:
+        chapter_path = Path("novel/chapters") / f"{current_chapter:03d}.md"
 
-    if not chapter_path.is_file():
-        return f"第 {current_chapter} 章文件不存在，本次没有更新小说进度。"
+        if not chapter_path.is_file():
+          return f"第 {current_chapter} 章文件不存在，本次没有更新小说进度。"
 
-    file_path = Path("novel/state.json")
+        file_path = Path("novel/state.json")
+        temp_path = Path("novel/state.json.tmp")
 
-    content = file_path.read_text(
-        encoding="utf-8"
-    )
+        content = file_path.read_text(
+          encoding="utf-8"
+        )
 
-    state = json.loads(content)
-    expected_chapter = state["current_chapter"] + 1
-    if expected_chapter != current_chapter:
-        return f"下一章节应该是第 {expected_chapter} 章，当前要更新的章节是第 {current_chapter} 章，不符合逐章续写"
+        state = json.loads(content)
+        expected_chapter = state["current_chapter"] + 1
+        if expected_chapter != current_chapter:
+          return f"下一章节应该是第 {expected_chapter} 章，当前要更新的章节是第 {current_chapter} 章，不符合逐章续写"
 
-    state["current_chapter"] = current_chapter
-    state["location"] = location
+        state["current_chapter"] = current_chapter
+        state["location"] = location
 
-
-    file_path.write_text(
-        json.dumps(
+        temp_path.write_text(
+          json.dumps(
             state,
             ensure_ascii=False,
             indent=2,
-        ),
-        encoding="utf-8",
-    )
+          ),
+          encoding="utf-8",
+        )
+        temp_path.replace(file_path)
+    except OSError as error:
+        return f"小说状态更新失败，详见 {error}"
+    except json.decoder.JSONDecodeError as error:
+        return f"小说状态文件 JSON 格式错误 {error}"
+
     return f"小说进度已更新到第 {current_chapter} 章"
+
+
 
 tools = [
     read_world,
