@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 from langchain_core.tools import tool
+from langchain_core.output_parsers import StrOutputParser
+from model import model
 
 @tool
 def read_world():
@@ -160,6 +162,43 @@ def read_chapter_summary(chapter: int) -> str:
     else:
         return result
 
+@tool
+def generate_chapter_summary(chapter: int) -> str:
+    """根据已保存的章节正文生成并保存摘要。章节保存成功以后使用。"""
+    chapter_path = Path("novel/chapters") / f"{chapter:03d}.md"
+
+    if not chapter_path.is_file():
+        return f"第 {chapter} 章正文不存在，无法生成摘要。"
+
+    summary_path = Path("novel/summaries") / f"{chapter:03d}.md"
+
+    if summary_path.exists():
+        return f"第 {chapter} 章摘要已存在，本次没有重新生成。"
+
+    content = chapter_path.read_text(encoding="utf-8")
+
+    prompt = f"""
+      请为下面的小说章节生成约 150 字的摘要，按四项输出：
+      1. 关键事件
+      2. 人物状态与变化
+      3. 未解决的问题或伏笔
+      4. 结尾场景与下一步安排
+
+      只保留正文支持的信息，保持原文的不确定性，不补充猜测。
+      优先保留明确的修炼境界、能力变化和人物目标。
+
+      章节正文：
+      {content}
+    """
+
+    chain = model | StrOutputParser()
+    summary = chain.invoke(prompt)
+
+    summary_path.parent.mkdir(parents=True, exist_ok=True)
+    summary_path.write_text(summary, encoding="utf-8")
+
+    return f"第 {chapter} 章摘要已保存：{summary_path}"
+
 
 tools = [
     read_world,
@@ -169,5 +208,6 @@ tools = [
     get_novel_state,
     write_chapter,
     update_novel_state,
-    read_chapter_summary
+    read_chapter_summary,
+    generate_chapter_summary
 ]
