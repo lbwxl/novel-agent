@@ -194,6 +194,9 @@ def generate_chapter_summary(chapter: int) -> str:
     chain = model | StrOutputParser()
     summary = chain.invoke(prompt)
 
+    if not summary.strip():
+        return f"第 {chapter} 章摘要生成失败：模型返回了空摘要，本次没有保存。请重试摘要生成。"
+
     summary_path.parent.mkdir(parents=True, exist_ok=True)
     summary_path.write_text(summary, encoding="utf-8")
 
