@@ -145,6 +145,20 @@ def update_novel_state(
 
     return f"小说进度已更新到第 {current_chapter} 章"
 
+@tool
+def read_chapter_summary(chapter: int) -> str:
+    """读取指定章节的摘要，用于快速回顾历史事件、人物变化和伏笔。
+    chapter 是章节号。摘要省略了细节，需要精确信息时使用 read_chapter。
+    """
+    # 在这里读取摘要文件并返回内容
+    file_path = Path("novel/summaries") / f"{chapter:03d}.md"
+    if not file_path.exists():
+        return "文件不存在"
+    result = file_path.read_text(encoding="utf-8")
+    if result.strip() == "":
+        return "文件内容为空"
+    else:
+        return result
 
 
 tools = [
@@ -154,5 +168,6 @@ tools = [
     read_chapter,
     get_novel_state,
     write_chapter,
-    update_novel_state
+    update_novel_state,
+    read_chapter_summary
 ]
