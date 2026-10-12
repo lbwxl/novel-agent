@@ -12,6 +12,17 @@ def get_chapter(chapter: int):
   connection.close()
   return row
 
+def update_chapter_title(chapter: int, title: str):
+    connection = sqlite3.connect("novel/learning.sqlite3")
+
+    connection.execute(
+      "UPDATE chapters SET title = ? WHERE chapter = ?",
+      [title, chapter],
+    )
+
+    connection.commit()
+    connection.close()
+
 # connection = sqlite3.connect("novel/learning.sqlite3")
 # print("数据库连接成功")
 #
@@ -40,5 +51,6 @@ def get_chapter(chapter: int):
 # connection.close()
 
 if __name__ == "__main__":
+    update_chapter_title(1, "青石村之夜")
     print(get_chapter(1))
     print(get_chapter(2))
