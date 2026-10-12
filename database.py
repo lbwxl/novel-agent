@@ -23,6 +23,17 @@ def update_chapter_title(chapter: int, title: str):
     connection.commit()
     connection.close()
 
+
+def delete_chapter(chapter: int):
+  connection = sqlite3.connect("novel/learning.sqlite3")
+
+  connection.execute(
+    "DELETE FROM chapters WHERE chapter = ?",
+    [chapter],
+  )
+
+  connection.commit()
+  connection.close()
 # connection = sqlite3.connect("novel/learning.sqlite3")
 # print("数据库连接成功")
 #
@@ -51,6 +62,17 @@ def update_chapter_title(chapter: int, title: str):
 # connection.close()
 
 if __name__ == "__main__":
-    update_chapter_title(1, "青石村之夜")
-    print(get_chapter(1))
-    print(get_chapter(2))
+    # 准备一条专门用于删除练习的记录。
+    connection = sqlite3.connect("novel/learning.sqlite3")
+    connection.execute(
+        "INSERT INTO chapters (chapter, title, content) VALUES (?, ?, ?)",
+        [2, "测试章节", "这是一条删除练习数据。"],
+    )
+    connection.commit()
+    connection.close()
+
+    print("删除前：", get_chapter(2))
+
+    delete_chapter(2)
+
+    print("删除后：", get_chapter(2))
