@@ -2,6 +2,7 @@ import sqlite3
 
 def get_chapter(chapter: int):
   connection = sqlite3.connect("novel/learning.sqlite3")
+  connection.row_factory = sqlite3.Row
 
   cursor = connection.execute(
     "SELECT chapter, title, content FROM chapters WHERE chapter = ?",
@@ -10,7 +11,9 @@ def get_chapter(chapter: int):
 
   row = cursor.fetchone()
   connection.close()
-  return row
+  if row is None:
+    return None
+  return dict(row)
 
 def update_chapter_title(chapter: int, title: str):
     connection = sqlite3.connect("novel/learning.sqlite3")
@@ -99,6 +102,8 @@ def rollback_demo():
 #     print("删除后：", get_chapter(2))
 
 if __name__ == "__main__":
-    print("执行前：", get_chapter(3))
-    rollback_demo()
-    print("执行后：", get_chapter(3))
+    chapter = get_chapter(1)
+    print(chapter)
+    print(chapter["title"])
+    print(chapter["content"])
+    print(get_chapter(2))
