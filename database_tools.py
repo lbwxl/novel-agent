@@ -1,5 +1,5 @@
 from langchain_core.tools import tool
-from database import get_chapter
+from sqlalchemy_demo import get_chapter
 
 @tool
 def read_database_chapter(chapter: int) -> str:
