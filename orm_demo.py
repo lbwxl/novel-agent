@@ -1,6 +1,7 @@
-from sqlalchemy_demo import get_chapter
+
+from sqlalchemy_demo import engine
 from sqlalchemy import Integer, Text
-from sqlalchemy.orm import DeclarativeBase, mapped_column
+from sqlalchemy.orm import DeclarativeBase, mapped_column, Session
 
 # class Chapter:
 #     def __init__(self, chapter: int, title: str, content: str):
@@ -20,17 +21,15 @@ class Chapter(Base):
 
 
 if __name__ == "__main__":
-    record = get_chapter(1)
+  with Session(engine) as session:
+    chapter = session.get(Chapter, 1)
 
-    if record is None:
-        print("第 1 章不存在")
+    if chapter is None:
+      print("第 1 章不存在")
     else:
-        chapter = Chapter(
-          chapter=record["chapter"],
-          title=record["title"],
-          content=record["content"],
-        )
+      print(type(chapter))
+      print(chapter.chapter)
+      print(chapter.title)
+      print(chapter.content)
 
-        print(chapter.chapter)
-        print(chapter.title)
-        print(chapter.content)
+    print(session.get(Chapter, 2))
